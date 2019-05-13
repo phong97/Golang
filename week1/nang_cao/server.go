@@ -112,6 +112,7 @@ func GetDisplayName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == http.ErrNoCookie {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(fmt.Sprint("token is invalid")))
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -130,6 +131,7 @@ func GetDisplayName(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(fmt.Sprint("token is invalid")))
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -137,6 +139,7 @@ func GetDisplayName(w http.ResponseWriter, r *http.Request) {
 	}
 	if !token.Valid {
 		w.WriteHeader(http.StatusUnauthorized)
+		w.Write([]byte(fmt.Sprint("token is invalid")))
 		return
 	}
 	w.Write([]byte(fmt.Sprintf("The access token correct")))
