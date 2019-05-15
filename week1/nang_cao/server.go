@@ -20,7 +20,7 @@ type account struct {
 }
 
 type Claims struct {
-	username string `json:"username"`
+	Username string `json:"username"`
 	jwt.StandardClaims
 }
 
@@ -43,7 +43,7 @@ func comparePassword(hashedPwd string, password string) bool {
 
 func generateToken(username string, expireTime time.Time) (string, error) {
 	claims := &Claims{
-		username: username,
+		Username: username,
 		StandardClaims: jwt.StandardClaims{
 			ExpiresAt: expireTime.Unix(),
 		},
@@ -52,6 +52,8 @@ func generateToken(username string, expireTime time.Time) (string, error) {
 	return token.SignedString(jwtKey)
 }
 
+// get username, password from request
+// then, generate password and save in redis
 func Register(w http.ResponseWriter, r *http.Request) {
 	//get user
 	var user account
@@ -62,11 +64,16 @@ func Register(w http.ResponseWriter, r *http.Request) {
 
 	//set user to redis
 	client := cache.GetInstance().Client
-	cache.Set(user.username, generatePassword(user.password), 0, client)
-	w.WriteHeader(http.StatusCreated)
+	status := cache.Set(user.username, generatePassword(user.password), 0, client)
+	if !status {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	w.Write([]byte(user.username))
 }
 
+// get username, password from request
+// compare password and if ok, generate token and set cookie
 func Login(w http.ResponseWriter, r *http.Request) {
 	//get user
 	var user account
@@ -106,13 +113,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(message))
 }
 
+// get token from cookie and check token
+// if ok, return username
 func GetDisplayName(w http.ResponseWriter, r *http.Request) {
 	//get token from client
 	cookie, err := r.Cookie("token")
 	if err != nil {
 		if err == http.ErrNoCookie {
 			w.WriteHeader(http.StatusUnauthorized)
-			w.Write([]byte(fmt.Sprint("token is invalid")))
+			w.Write([]byte(fmt.Sprint("No Cookie")))
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
@@ -120,29 +129,39 @@ func GetDisplayName(w http.ResponseWriter, r *http.Request) {
 	}
 	// Get the JWT string from the cookie
 	tokenString := cookie.Value
+	if tokenString == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprint("empty token")))
+		return
+	}
 
-	//new claims
-	claims := &Claims{}
-
-	//parsing tokenString and save the results in claims
-	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
+	//parsing tokenString and save the results in token
+	token, err := jwt.ParseWithClaims(tokenString, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		return jwtKey, nil
 	})
+
 	if err != nil {
+		if !token.Valid {
+			w.WriteHeader(http.StatusUnauthorized)
+			w.Write([]byte(fmt.Sprint("token is invalid")))
+			return
+		}
 		if err == jwt.ErrSignatureInvalid {
 			w.WriteHeader(http.StatusUnauthorized)
 			w.Write([]byte(fmt.Sprint("token is invalid")))
 			return
 		}
 		w.WriteHeader(http.StatusBadRequest)
-		return
-	}
-	if !token.Valid {
-		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(fmt.Sprint("token is invalid")))
 		return
 	}
-	w.Write([]byte(fmt.Sprintf("The access token correct")))
+
+	if claims, ok := token.Claims.(*Claims); ok && token.Valid {
+		w.Write([]byte(fmt.Sprintf("username : %v", claims.Username)))
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte(fmt.Sprint("token is invalid")))
+	}
 }
 
 func main() {
@@ -152,6 +171,6 @@ func main() {
 	r.Get("/display", GetDisplayName)
 
 	http.Handle("/", r)
-	http.ListenAndServe(":8080", nil)
 	log.Println("Server run port 8080")
+	http.ListenAndServe(":8080", nil)
 }

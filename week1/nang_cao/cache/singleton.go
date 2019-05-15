@@ -36,6 +36,7 @@ func setupRedis() *redis.Client {
 }
 
 func GetInstance() *singletonRedisClient {
+	// chỉ chạy func lần đầu tiên được gọi
 	once.Do(func() {
 		instance = &singletonRedisClient{*setupRedis()}
 	})
@@ -53,7 +54,7 @@ func Set(key, value string, time time.Duration, client redis.Client) bool {
 func Get(username string, client redis.Client) string {
 	token, err := client.Get(username).Result()
 	if err != nil {
-		log.Fatal(err)
+		log.Println(err)
 		return ""
 	}
 	return token
