@@ -6,6 +6,7 @@ Week 1
 
 - Cache giúp tăng tốc độ xử lý giải quyết vấn đề về hiệu suất và thắt cổ chai. Ví dụ: 100 request cần 100 lần query database để trả về chung một kết quả sẽ tốn thời gian. Chúng ta thay vào đó dùng cache để lưu kết quả của query ở request đầu tiên và 99 request còn lại chỉ cần vào cache lấy về.
 - Cache giúp giảm chi phí cho ứng dụng. Chúng ta tưởng tượng ứng dụng sẽ đạt đến một lượng lớn request cần phải đảm bảo xử lý tốt và ổn định. Vì thế, chúng ta nghĩ đến việc nâng cấp CPU, RAM hay load balancing... Và cache cũng là một giải pháp nhưng lại không tốn thêm phí nên hạn chế bớt chi phí cho việc triển khai ứng dụng.
+- => truy xuất dữ liệu từ ổ ứng lâu, chúng ta sẽ xảy ra hiện tượng thắt cổ chai nên cần một giải pháp tốt hơn đó là lưu trên RAM nên cache được sinh ra để giải quyết vấn đề này.
 
 ### 1.2.  Khi đồng bộ giữa Cache và Disk sẽ phát sinh các nguy cơ gì?
 
@@ -21,7 +22,7 @@ Week 1
 
 ### 2.1. String
 
-- String là kiểu dữ liệu cơ bản nhất của Redis và là string, float hoặc interger. Redis có thể làm việc với cả string, từng phần của string hay tăng giảm giá trị của interger/float.
+- String là kiểu dữ liệu cơ bản nhất của Redis và là string, float hoặc interger hay chuỗi binary. Redis có thể làm việc với cả string, từng phần của string hay tăng giảm giá trị của interger/float.
 - Có 3 câu lệnh cơ bản với String là GET, SET và DEL.
 - Chúng ta có thể sử dụng kiểu String cho nhiều trường hợp như redis key, lưu các đoạn hoặc trang HTML...
 
@@ -35,16 +36,19 @@ Week 1
 
 - Lưu trữ tập các map của key và value. Các field và giá trị đều là kiểu Redis string. Key được sắp xếp ngẫu nhiên, không theo thứ tự nào cả.
 - Hash thường dùng để biểu diễn một object.
+- Tổ chức dữ liệu với hash ít tiêu tốn tài nguyên hơn là string và thứ 2 là thời gian expire time tức là thay vì tổ chức dữ liệu theo string thì expire time cho từng key việc quản lí khó lỏng lẻo còn đối với hash chỉ cần 1 expire time, hết hạn dữ liệu trong key được hủy hết an toàn chặt chẽ.
 
 ### 2.4. Set
 
 - Là tập hợp các string, các phần tử không được sắp xếp.
 - Set rất tốt để thể hiện quan hệ giữa các object.
+- Ví dụ: chúng ta có 1 set lưu id của các nhân viên lập trình nhóm mobile và 1 set lưu id của các nhân viên lập trình nhóm java. chúng ta cần tìm các nhân viên vừa thuộc nhóm mobile vừa thuộc nhóm java thì chỉ cần union 2 set này lại với nhau.
 
 ### 2.5. Sorted Set
 
 - Giống như Set nhưng mỗi phần tử là map của 1 string (member) và 1 floating-point number (score), nó được sắp xếp theo score này.
 - Sorted Set dùng cho những bài toán xếp hạng, tìm vị trí top.
+- Quan trọng nhất của zset là việc tự đông sắp xếp theo score.
 
 ## 3. Golang: goroutine, channel, interfaces có ưu điểm gì, khi nào dùng?
 
