@@ -1,0 +1,6 @@
+[database]
+  dbname = "test"
+  hostname = "localhost"
+  password = "12345"
+  port = "5432"
+  username = "postgres"
