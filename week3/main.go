@@ -6,7 +6,7 @@ import (
 	"time"
 
 	client "github.com/Golang/week3/db"
-	entity "github.com/Golang/week3/db/entity"
+	"github.com/Golang/week3/db/entity"
 
 	"github.com/jinzhu/gorm/dialects/postgres"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
@@ -15,26 +15,6 @@ import (
 const tbCustomer = "customer"
 
 type Customer entity.Customer
-
-func (customer Customer) Create() error {
-	db := client.GetConnectionDB()
-	return db.Debug().Table(tbCustomer).Create(&customer).Error
-}
-
-func (customer *Customer) Read() error {
-	db := client.GetConnectionDB()
-	return db.Debug().Table(tbCustomer).First(&customer).Error
-}
-
-func Update() error {
-	db := client.GetConnectionDB()
-	return db.Debug().Table(tbCustomer).Where("firstname = 'Bao'").Updates(Customer{Firstname: "ABao"}).Error
-}
-
-func Delete() error {
-	db := client.GetConnectionDB()
-	return db.Debug().Table(tbCustomer).Where("firstname = 'ABao'").Delete(Customer{}).Error
-}
 
 func main() {
 	db := client.GetConnectionDB()
@@ -51,24 +31,52 @@ func main() {
 		Secrets:   postgres.Hstore{"cardID": &cardID},
 	}
 
-	new_customer.Create()
-	var customer Customer
-	customers.Read()
-	for _, c := range customers {
-		fmt.Println(c)
+	fmt.Println("Create: ")
+	err := db.Table(tbCustomer).Create(&new_customer).Error
+	if err != nil {
+		fmt.Println("That bai")
+	} else {
+		fmt.Println("Thanh cong")
 	}
-	// db.Debug().Table(tbCustomer).Create(&new_customer)
 
-	// var customer entity.Customer
-	// // var customers []entity.Customer
+	fmt.Println("Update: ")
+	err = db.Table(tbCustomer).Where("firstname = 'anh Bao'").Updates(Customer{Firstname: "ABao"}).Error
+	if err != nil {
+		fmt.Println("That bai")
+	} else {
+		fmt.Println("Thanh cong")
+	}
 
-	// db.Debug().Table(tbCustomer).First(&customer)
-	// if err := db.Debug().Table(tbCustomer).First(&customer); err != nil {
-	// 	fmt.Println(customer)
-	// }
+	fmt.Println("Read: ")
+	var customer Customer
+	err = db.Table(tbCustomer).First(&customer).Error
+	if err != nil {
+		fmt.Println("That bai")
+	} else {
+		fmt.Println("First name: " + customer.Firstname)
+		fmt.Println("Last name: " + customer.Lastname)
+		fmt.Println("Address: ")
+		for _, value := range customer.Address {
+			fmt.Println(value)
+		}
+		fmt.Println("Body: ")
+		var _body map[string]interface{}
+		byte_body, _ := customer.Body.MarshalJSON()
+		json.Unmarshal(byte_body, &_body)
+		fmt.Println(_body)
+		fmt.Println("Secrets: ")
+		for key, val := range customer.Secrets {
+			if val != nil {
+				fmt.Println(key + " => " + *val)
+			}
+		}
+	}
 
-	// var _note map[string]interface{}
-	// b, _ := customer.Note.MarshalJSON()
-	// json.Unmarshal(b, &_note)
-	// fmt.Println(_note)
+	fmt.Println("Delete: ")
+	err = db.Table(tbCustomer).Where("firstname = 'ABao'").Delete(Customer{}).Error
+	if err != nil {
+		fmt.Println("That bai")
+	} else {
+		fmt.Println("Thanh cong")
+	}
 }

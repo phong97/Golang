@@ -15,7 +15,7 @@ var db *gorm.DB
 // GetController return controller
 func GetConnectionDB() *gorm.DB {
 	once.Do(func() {
-		connString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s",
+		connString := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=disable",
 			config.GetConfig().HostnameDb, config.GetConfig().PortDb, config.GetConfig().UsernameDb, config.GetConfig().DbName, config.GetConfig().PasswordDb)
 		gormDb, err := gorm.Open("postgres", connString)
 		// Use singular table as default
