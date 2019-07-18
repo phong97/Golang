@@ -1,0 +1,13 @@
+[postgres]
+  dbname = "dvdrental"
+  hostname = "localhost"
+  password = "12345"
+  port = "5432"
+  username = "postgres"
+
+[mysql]
+  hostname = "localhost"
+  port = "3306"
+  username = "root"
+  password = "12345"
+  dbname = "sakila"

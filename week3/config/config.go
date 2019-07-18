@@ -27,8 +27,9 @@ func GetConfig() *ServerConfig {
 
 func readConfig() *ServerConfig {
 	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
+	viper.AddConfigPath("./config")
 	viper.SetConfigType("toml")
+	//set default
 	viper.SetDefault("database.dbname", "test")
 	viper.SetDefault("database.username", "postgres")
 	viper.SetDefault("database.password", "12345")
